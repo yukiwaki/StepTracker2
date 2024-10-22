@@ -8,7 +8,8 @@ import { CollectionCelebration } from '../components/CollectionCelebration';
 import { MultiplierModal } from '../components/MultiplierModal';
 import { MultipliedRewardCelebration } from '../components/MultipliedRewardCelebration';
 import type { Multiplier } from '../types/rewards';
-import { RewardedAdEventType, AdEventType } from 'react-native-google-mobile-ads';
+import { Button } from 'react-native';
+import { testNotification } from '../utils/notifications';
 
 export default function Home() {
   const { coins, todayStats, collectReward, applyMultiplier } = useReward();
@@ -84,6 +85,19 @@ export default function Home() {
             />
           ))}
         </View>
+
+        <Button 
+          title="Test Notification"
+          onPress={async () => {
+            console.log('Testing notification...');
+            try {
+              await testNotification();
+              console.log('Test notification sent successfully');
+            } catch (error) {
+              console.error('Error in test notification:', error);
+            }
+          }}
+        />
       </ScrollView>
 
       <CollectionCelebration

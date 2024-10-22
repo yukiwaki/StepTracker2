@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { initializeAds } from './utils/ads';
 import Home from './screens/home';
 import { RewardProvider } from './contexts/reward-context';
+import { setupNotifications } from './utils/notifications';
 
 export default function App() {
   useEffect(() => {
@@ -14,6 +15,7 @@ export default function App() {
   useEffect(() => {
     const init = async () => {
       await initializeAds();
+      await setupNotifications();
     };
     init();
   }, []);
@@ -29,6 +31,8 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
+
+
 
 const styles = StyleSheet.create({
   container: {

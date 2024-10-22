@@ -1,7 +1,9 @@
 import { createContext, useContext, useReducer, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { scheduleStepMilestoneNotification } from '../utils/notifications';
 import type { DailyStats, RewardBox } from '../types/rewards';
 import type { Multiplier } from '../types/rewards';
+import { AppState, AppStateStatus } from 'react-native';
 
 interface RewardState {
   coins: number;
@@ -54,6 +56,17 @@ function rewardReducer(state: RewardState, action: RewardAction): RewardState {
       const newSteps = action.payload;
       const currentBoxes = state.todayStats.rewardBoxes;
       const newBoxes = createRewardBoxes(newSteps);
+
+      // Check if we've hit a new milestone
+      const previousMilestoneCount = currentBoxes.length;
+      const newMilestoneCount = newBoxes.length;
+
+      // If we've hit a new milestone and app is in background, trigger notification
+      if (newMilestoneCount > previousMilestoneCount) {
+        scheduleStepMilestoneNotification(newSteps).catch(error => 
+          console.error('Failed to schedule notification:', error)
+         );
+      }
       
       // Preserve collection status for existing boxes
       const updatedBoxes = newBoxes.map(newBox => {
@@ -141,6 +154,17 @@ export function RewardProvider({ children }: { children: React.ReactNode }) {
       rewardBoxes: []
     }
   });
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      // Store the last app state to handle background notifications properly
+      AsyncStorage.setItem('lastAppState', nextAppState);
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   useEffect(() => {
     async function loadSavedState() {
