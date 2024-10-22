@@ -78,16 +78,24 @@ function rewardReducer(state: RewardState, action: RewardAction): RewardState {
       const { boxId, multiplier } = action.payload;
       const box = state.todayStats.rewardBoxes.find(b => b.id === boxId);
       if (!box || !box.collected) return state;
-
+    
+      // Calculate additional coins from multiplier
+      const baseReward = 1; // Base reward is 1 coin
+      const totalReward = baseReward * multiplier;
+      const additionalCoins = totalReward - baseReward; // We already added the base reward when collecting
+    
       const newState = {
-        coins: state.coins + Math.floor(multiplier - 1), // Add the multiplier bonus
+        coins: state.coins + additionalCoins,
         todayStats: {
           ...state.todayStats,
           rewardBoxes: state.todayStats.rewardBoxes.map(b => 
             b.id === boxId ? { ...b, multiplier } : b
           ),
         }
-      }
+      };
+    
+      AsyncStorage.setItem('rewardState', JSON.stringify(newState));
+      return newState;
     }
 
     case 'COLLECT_REWARD': {

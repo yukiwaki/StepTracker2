@@ -86,12 +86,17 @@ export default function Home() {
         onComplete={() => setShowCelebration(false)}
       />
 
+      {selectedBoxId && (
         <MultiplierModal
-        visible={showMultiplier}
-        onClose={() => setShowMultiplier(false)}
-        onSelectMultiplier={handleMultiplier}
-      />
-
+          visible={showMultiplier}
+          onClose={() => {
+            setShowMultiplier(false);
+            setSelectedBoxId(null);
+          }}
+          onSelectMultiplier={handleMultiplier}
+          boxId={selectedBoxId}
+        />
+      )}
 
     </SafeAreaView>
   );
