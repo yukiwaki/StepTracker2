@@ -6,10 +6,21 @@ import { initializeAds } from './utils/ads';
 import Home from './screens/home';
 import { RewardProvider } from './contexts/reward-context';
 import { setupNotifications } from './utils/notifications';
+import { registerBackgroundFetch } from './utils/background-fetch';
+
 
 export default function App() {
   useEffect(() => {
     initializeAds();
+  }, []);
+
+  useEffect(() => {
+    const init = async () => {
+      await initializeAds();
+      await setupNotifications();
+      await registerBackgroundFetch(); // Add this
+    };
+    init();
   }, []);
 
   useEffect(() => {
