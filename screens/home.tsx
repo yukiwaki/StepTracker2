@@ -1,37 +1,38 @@
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useReward } from '../contexts/reward-context';
 import { useHealthKit } from '../hooks/useHealthKit';
-import type { RewardBox } from '../types/rewards';
-
-interface RewardBoxComponentProps {
-  box: RewardBox;
-  onCollect: () => void;
-}
-
-function RewardBoxComponent({ box, onCollect }: RewardBoxComponentProps) {
-  return (
-    <TouchableOpacity 
-      style={[
-        styles.rewardBox,
-        box.collected && styles.rewardBoxCollected
-      ]}
-      onPress={onCollect}
-      disabled={box.collected}
-    >
-      <Text style={styles.rewardBoxText}>
-        {box.collected ? '✓' : '🎁'}
-      </Text>
-      <Text style={styles.rewardBoxSteps}>
-        {box.stepMilestone} steps
-      </Text>
-    </TouchableOpacity>
-  );
-}
+import { RewardBoxComponent } from '../components/RewardBox';
+import { CollectionCelebration } from '../components/CollectionCelebration';
+import { MultiplierModal } from '../components/MultiplierModal';
+import type { Multiplier } from '../types/rewards';
+import { RewardedAdEventType, AdEventType } from 'react-native-google-mobile-ads';
 
 export default function Home() {
-  const { coins, todayStats, collectReward } = useReward();
+  const { coins, todayStats, collectReward, applyMultiplier } = useReward();
   const { isAuthorized, error } = useHealthKit();
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [showMultiplier, setShowMultiplier] = useState(false);
+  const [selectedBoxId, setSelectedBoxId] = useState<string | null>(null);
+
+  const handleCollectReward = (boxId: string) => {
+    collectReward(boxId);
+    setSelectedBoxId(boxId);
+    setShowCelebration(true);
+    
+    // Show multiplier modal after celebration
+    setTimeout(() => {
+      setShowMultiplier(true);
+    }, 1600);
+  };
+
+  const handleMultiplier = (multiplier: Multiplier) => {
+    if (selectedBoxId) {
+      applyMultiplier(selectedBoxId, multiplier);
+    }
+  };
+    
 
   if (!isAuthorized) {
     return (
@@ -74,11 +75,24 @@ export default function Home() {
             <RewardBoxComponent
               key={box.id}
               box={box}
-              onCollect={() => collectReward(box.id)}
+              onCollect={() => handleCollectReward(box.id)}
             />
           ))}
         </View>
       </ScrollView>
+
+      <CollectionCelebration
+        visible={showCelebration}
+        onComplete={() => setShowCelebration(false)}
+      />
+
+        <MultiplierModal
+        visible={showMultiplier}
+        onClose={() => setShowMultiplier(false)}
+        onSelectMultiplier={handleMultiplier}
+      />
+
+
     </SafeAreaView>
   );
 }

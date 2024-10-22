@@ -1,6 +1,7 @@
 import { createContext, useContext, useReducer, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { DailyStats, RewardBox } from '../types/rewards';
+import type { Multiplier } from '../types/rewards';
 
 interface RewardState {
   coins: number;
@@ -10,6 +11,7 @@ interface RewardState {
 interface RewardContextType extends RewardState {
   addSteps: (steps: number) => void;
   collectReward: (boxId: string) => void;
+  applyMultiplier: (boxId: string, multiplier: Multiplier) => void;
 }
 
 const STEPS_PER_REWARD = 500;
@@ -19,6 +21,7 @@ const RewardContext = createContext<RewardContextType | null>(null);
 type RewardAction = 
   | { type: 'UPDATE_STEPS'; payload: number }
   | { type: 'COLLECT_REWARD'; payload: string }
+  | { type: 'APPLY_MULTIPLIER'; payload: { boxId: string; multiplier: Multiplier } }
   | { type: 'LOAD_SAVED_STATE'; payload: RewardState };
 
 function getToday(): string {
@@ -71,6 +74,22 @@ function rewardReducer(state: RewardState, action: RewardAction): RewardState {
       return newState;
     }
 
+    case 'APPLY_MULTIPLIER': {
+      const { boxId, multiplier } = action.payload;
+      const box = state.todayStats.rewardBoxes.find(b => b.id === boxId);
+      if (!box || !box.collected) return state;
+
+      const newState = {
+        coins: state.coins + Math.floor(multiplier - 1), // Add the multiplier bonus
+        todayStats: {
+          ...state.todayStats,
+          rewardBoxes: state.todayStats.rewardBoxes.map(b => 
+            b.id === boxId ? { ...b, multiplier } : b
+          ),
+        }
+      }
+    }
+
     case 'COLLECT_REWARD': {
       const today = getToday();
       if (state.todayStats.date !== today) {
@@ -102,6 +121,8 @@ function rewardReducer(state: RewardState, action: RewardAction): RewardState {
       return state;
   }
 }
+
+
 
 export function RewardProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(rewardReducer, {
@@ -136,11 +157,19 @@ export function RewardProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'COLLECT_REWARD', payload: boxId });
   };
 
+  const applyMultiplier = (boxId: string, multiplier: Multiplier) => {
+    dispatch({ type: 'APPLY_MULTIPLIER', payload: { boxId, multiplier } });
+  };
+  
+  // Add applyMultiplier to context value
   return (
-    <RewardContext.Provider value={{ ...state, addSteps, collectReward }}>
+    <RewardContext.Provider 
+      value={{ ...state, addSteps, collectReward, applyMultiplier }}
+    >
       {children}
     </RewardContext.Provider>
   );
+
 }
 
 export function useReward() {
