@@ -6,6 +6,7 @@ import { useHealthKit } from '../hooks/useHealthKit';
 import { RewardBoxComponent } from '../components/RewardBox';
 import { CollectionCelebration } from '../components/CollectionCelebration';
 import { MultiplierModal } from '../components/MultiplierModal';
+import { MultipliedRewardCelebration } from '../components/MultipliedRewardCelebration';
 import type { Multiplier } from '../types/rewards';
 import { RewardedAdEventType, AdEventType } from 'react-native-google-mobile-ads';
 
@@ -15,6 +16,8 @@ export default function Home() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [showMultiplier, setShowMultiplier] = useState(false);
   const [selectedBoxId, setSelectedBoxId] = useState<string | null>(null);
+  const [showMultipliedCelebration, setShowMultipliedCelebration] = useState(false);
+  const [multipliedAmount, setMultipliedAmount] = useState<Multiplier | null>(null);
 
   const handleCollectReward = (boxId: string) => {
     collectReward(boxId);
@@ -29,6 +32,8 @@ export default function Home() {
 
   const handleMultiplier = (multiplier: Multiplier) => {
     if (selectedBoxId) {
+      setMultipliedAmount(multiplier);
+      setShowMultipliedCelebration(true);
       applyMultiplier(selectedBoxId, multiplier);
     }
   };
@@ -83,7 +88,10 @@ export default function Home() {
 
       <CollectionCelebration
         visible={showCelebration}
-        onComplete={() => setShowCelebration(false)}
+        onComplete={() => {
+          setShowCelebration(false);
+          setShowMultiplier(true);
+        }}
       />
 
       {selectedBoxId && (
@@ -98,6 +106,18 @@ export default function Home() {
         />
       )}
 
+      {/* Add MultipliedRewardCelebration outside the modal */}
+      {multipliedAmount && (
+        <MultipliedRewardCelebration
+          visible={showMultipliedCelebration}
+          baseAmount={1}
+          multiplier={multipliedAmount}
+          onComplete={() => {
+            setShowMultipliedCelebration(false);
+            setMultipliedAmount(null);
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }

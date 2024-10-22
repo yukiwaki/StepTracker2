@@ -103,7 +103,9 @@ export function MultiplierModal({
         RewardedAdEventType.EARNED_REWARD,
         () => {
           console.log('Reward earned for box:', boxId, 'multiplier:', multiplier);
-          setShowMultipliedReward(true);
+          // Close modal first, then show celebration from parent
+          onSelectMultiplier(multiplier);
+          onClose();
         }
       );
 
@@ -113,9 +115,7 @@ export function MultiplierModal({
           console.log('Ad closed for box:', boxId);
           unsubscribeReward();
           unsubscribeClose();
-          if (!showMultipliedReward) {
-            onClose();
-          }
+          onClose();
         }
       );
 
@@ -125,7 +125,9 @@ export function MultiplierModal({
       console.error('Failed to show ad:', error);
       onClose();
     }
-  };
+};
+
+
 
   const handleCelebrationComplete = useCallback(() => {
     console.log('Celebration complete for box:', boxId, 'multiplier:', selectedMultiplier);
