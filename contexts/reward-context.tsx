@@ -1,30 +1,103 @@
-import { createContext, useContext, useReducer } from 'react';
+import { createContext, useContext, useReducer, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { DailyStats, RewardBox } from '../types/rewards';
 
 interface RewardState {
   coins: number;
-  stepsToNextReward: number;
+  todayStats: DailyStats;
 }
 
 interface RewardContextType extends RewardState {
-  addCoins: (amount: number) => void;
-  updateSteps: (steps: number) => void;
+  addSteps: (steps: number) => void;
+  collectReward: (boxId: string) => void;
 }
+
+const STEPS_PER_REWARD = 500;
 
 const RewardContext = createContext<RewardContextType | null>(null);
 
-type RewardAction =
-  | { type: 'ADD_COINS'; payload: number }
-  | { type: 'UPDATE_STEPS'; payload: number };
+type RewardAction = 
+  | { type: 'UPDATE_STEPS'; payload: number }
+  | { type: 'COLLECT_REWARD'; payload: string }
+  | { type: 'LOAD_SAVED_STATE'; payload: RewardState };
+
+function getToday(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
+function createRewardBoxes(steps: number): RewardBox[] {
+  const numBoxes = Math.floor(steps / STEPS_PER_REWARD);
+  return Array.from({ length: numBoxes }, (_, index) => ({
+    id: `reward-${index}`,
+    stepMilestone: (index + 1) * STEPS_PER_REWARD,
+    collected: false
+  }));
+}
 
 function rewardReducer(state: RewardState, action: RewardAction): RewardState {
   switch (action.type) {
-    case 'ADD_COINS':
-      const newCoins = state.coins + action.payload;
-      AsyncStorage.setItem('coins', String(newCoins));
-      return { ...state, coins: newCoins };
-    case 'UPDATE_STEPS':
-      return { ...state, stepsToNextReward: action.payload };
+    case 'UPDATE_STEPS': {
+      const today = getToday();
+      
+      // Reset daily stats if it's a new day
+      if (today !== state.todayStats.date) {
+        state.todayStats = {
+          date: today,
+          steps: 0,
+          rewardBoxes: []
+        };
+      }
+
+      const newSteps = action.payload;
+      const currentBoxes = state.todayStats.rewardBoxes;
+      const newBoxes = createRewardBoxes(newSteps);
+      
+      // Preserve collection status for existing boxes
+      const updatedBoxes = newBoxes.map(newBox => {
+        const existingBox = currentBoxes.find(box => box.id === newBox.id);
+        return existingBox || newBox;
+      });
+
+      const newState = {
+        ...state,
+        todayStats: {
+          date: today,
+          steps: newSteps,
+          rewardBoxes: updatedBoxes
+        }
+      };
+
+      AsyncStorage.setItem('rewardState', JSON.stringify(newState));
+      return newState;
+    }
+
+    case 'COLLECT_REWARD': {
+      const today = getToday();
+      if (state.todayStats.date !== today) {
+        return state;
+      }
+
+      const updatedBoxes = state.todayStats.rewardBoxes.map(box => 
+        box.id === action.payload ? 
+          { ...box, collected: true } : 
+          box
+      );
+
+      const newState = {
+        coins: state.coins + 1,
+        todayStats: {
+          ...state.todayStats,
+          rewardBoxes: updatedBoxes
+        }
+      };
+
+      AsyncStorage.setItem('rewardState', JSON.stringify(newState));
+      return newState;
+    }
+
+    case 'LOAD_SAVED_STATE':
+      return action.payload;
+
     default:
       return state;
   }
@@ -33,14 +106,38 @@ function rewardReducer(state: RewardState, action: RewardAction): RewardState {
 export function RewardProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(rewardReducer, {
     coins: 0,
-    stepsToNextReward: 100,
+    todayStats: {
+      date: getToday(),
+      steps: 0,
+      rewardBoxes: []
+    }
   });
 
-  const addCoins = (amount: number) => dispatch({ type: 'ADD_COINS', payload: amount });
-  const updateSteps = (steps: number) => dispatch({ type: 'UPDATE_STEPS', payload: steps });
+  useEffect(() => {
+    async function loadSavedState() {
+      try {
+        const savedState = await AsyncStorage.getItem('rewardState');
+        if (savedState) {
+          const parsedState = JSON.parse(savedState);
+          dispatch({ type: 'LOAD_SAVED_STATE', payload: parsedState });
+        }
+      } catch (error) {
+        console.error('Failed to load saved state:', error);
+      }
+    }
+    loadSavedState();
+  }, []);
+
+  const addSteps = (steps: number) => {
+    dispatch({ type: 'UPDATE_STEPS', payload: steps });
+  };
+
+  const collectReward = (boxId: string) => {
+    dispatch({ type: 'COLLECT_REWARD', payload: boxId });
+  };
 
   return (
-    <RewardContext.Provider value={{ ...state, addCoins, updateSteps }}>
+    <RewardContext.Provider value={{ ...state, addSteps, collectReward }}>
       {children}
     </RewardContext.Provider>
   );

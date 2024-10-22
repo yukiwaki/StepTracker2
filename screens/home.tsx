@@ -1,11 +1,37 @@
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useReward } from '../contexts/reward-context';
 import { useHealthKit } from '../hooks/useHealthKit';
+import type { RewardBox } from '../types/rewards';
+
+interface RewardBoxComponentProps {
+  box: RewardBox;
+  onCollect: () => void;
+}
+
+function RewardBoxComponent({ box, onCollect }: RewardBoxComponentProps) {
+  return (
+    <TouchableOpacity 
+      style={[
+        styles.rewardBox,
+        box.collected && styles.rewardBoxCollected
+      ]}
+      onPress={onCollect}
+      disabled={box.collected}
+    >
+      <Text style={styles.rewardBoxText}>
+        {box.collected ? '✓' : '🎁'}
+      </Text>
+      <Text style={styles.rewardBoxSteps}>
+        {box.stepMilestone} steps
+      </Text>
+    </TouchableOpacity>
+  );
+}
 
 export default function Home() {
-  const { coins } = useReward();
-  const { steps, isAuthorized, error } = useHealthKit();
+  const { coins, todayStats, collectReward } = useReward();
+  const { isAuthorized, error } = useHealthKit();
 
   if (!isAuthorized) {
     return (
@@ -28,18 +54,31 @@ export default function Home() {
     );
   }
 
-  const stepsToNextReward = 100 - (steps % 100);
+  const uncollectedBoxes = todayStats.rewardBoxes.filter(box => !box.collected).length;
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>Step Tracker</Text>
-        <Text style={styles.steps}>{steps.toLocaleString()} steps</Text>
+        <Text style={styles.steps}>{todayStats.steps.toLocaleString()} steps</Text>
         <Text style={styles.coins}>🪙 {coins}</Text>
-        <Text style={styles.nextReward}>
-          {stepsToNextReward} steps until next coin
-        </Text>
-      </View>
+        
+        {uncollectedBoxes > 0 && (
+          <Text style={styles.availableRewards}>
+            {uncollectedBoxes} rewards available!
+          </Text>
+        )}
+
+        <View style={styles.rewardBoxContainer}>
+          {todayStats.rewardBoxes.map((box) => (
+            <RewardBoxComponent
+              key={box.id}
+              box={box}
+              onCollect={() => collectReward(box.id)}
+            />
+          ))}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -47,6 +86,13 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    alignItems: 'center',
   },
   content: {
     flex: 1,
@@ -67,11 +113,7 @@ const styles = StyleSheet.create({
   coins: {
     fontSize: 24,
     color: '#fff',
-    marginBottom: 10,
-  },
-  nextReward: {
-    fontSize: 16,
-    color: '#666',
+    marginBottom: 20,
   },
   text: {
     color: '#fff',
@@ -79,5 +121,40 @@ const styles = StyleSheet.create({
   },
   error: {
     color: '#ff4444',
+  },
+  availableRewards: {
+    fontSize: 18,
+    color: '#F203AF',
+    marginBottom: 20,
+  },
+  rewardBoxContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  rewardBox: {
+    width: 100,
+    height: 100,
+    backgroundColor: '#F203AF22',
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#F203AF',
+  },
+  rewardBoxCollected: {
+    backgroundColor: '#F203AF44',
+    borderColor: '#F203AF88',
+  },
+  rewardBoxText: {
+    fontSize: 24,
+    color: '#fff',
+    marginBottom: 5,
+  },
+  rewardBoxSteps: {
+    fontSize: 12,
+    color: '#fff',
+    textAlign: 'center',
   },
 });
