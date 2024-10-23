@@ -27,6 +27,7 @@ export default function App() {
     const init = async () => {
       await initializeAds();
       await setupNotifications();
+      await registerBackgroundFetch();
     };
     init();
   }, []);

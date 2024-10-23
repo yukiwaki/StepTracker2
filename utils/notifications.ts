@@ -3,13 +3,6 @@ import { Platform } from 'react-native';
 
 export async function setupNotifications() {
   // Configure how notifications are handled when app is in foreground
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true, // This will show notifications even in foreground
-      shouldPlaySound: true,
-      shouldSetBadge: true,
-    }),
-  });
 
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
@@ -22,6 +15,14 @@ export async function setupNotifications() {
   if (finalStatus !== 'granted') {
     return false;
   }
+
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true, // This will show notifications even in foreground
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
 
   if (Platform.OS === 'ios') {
     await Notifications.setNotificationCategoryAsync('steps', [
@@ -39,53 +40,60 @@ export async function setupNotifications() {
 }
 
 // Add this test function
-export async function testNotification() {
-  try {
-    const permission = await setupNotifications(); // Ensure permissions are set
-    if (!permission) {
-      console.log('No notification permission');
-      return;
-    }
+// export async function testNotification() {
+//   try {
+//     const permission = await setupNotifications(); // Ensure permissions are set
+//     if (!permission) {
+//       console.log('No notification permission');
+//       return;
+//     }
 
-    console.log('Scheduling test notification...'); // Debug log
+//     console.log('Scheduling test notification...'); // Debug log
     
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'Test Notification 🔔',
-        body: 'If you see this, notifications are working!',
-        sound: true,
-      },
-      trigger: null, // null means show immediately
-    });
+//     await Notifications.scheduleNotificationAsync({
+//       content: {
+//         title: 'Test Notification 🔔',
+//         body: 'If you see this, notifications are working!',
+//         sound: true,
+//       },
+//       trigger: null, // null means show immediately
+//     });
     
-    console.log('Test notification scheduled'); // Debug log
-  } catch (error) {
-    console.error('Error sending test notification:', error);
-  }
-}
+//     console.log('Test notification scheduled'); // Debug log
+//   } catch (error) {
+//     console.error('Error sending test notification:', error);
+//   }
+// }
 
 export async function scheduleStepMilestoneNotification(steps: number) {
-  const milestone = Math.floor(steps / 500) * 500 + 500;
+  const currentMilestone = Math.floor(steps / 500) * 500;
+  const nextMilestone = currentMilestone + 500;
   
-  // Different messages based on milestones
+  // Only notify if we've just passed a milestone
+  if (steps < nextMilestone) {
+    return;
+  }
+
+  console.log('Scheduling milestone notification for:', currentMilestone);
+
+  // Different messages for variety
   const messages = [
-    `Woohoo! You've hit ${milestone} steps! 🎉`,
-    `Amazing progress! ${milestone} steps reached! 💪`,
-    `You're on fire! ${milestone} steps and counting! 🔥`,
-    `Incredible! You've reached ${milestone} steps! ⭐️`
+    `Amazing! You've reached ${currentMilestone} steps! 🎉`,
+    `Great job! ${currentMilestone} steps completed! 💪`,
+    `Keep going! You've hit ${currentMilestone} steps! ⭐️`,
+    `Fantastic progress! ${currentMilestone} steps achieved! 🌟`
   ];
   
-  // Randomly select a message
   const messageIndex = Math.floor(Math.random() * messages.length);
-  
+
   await Notifications.scheduleNotificationAsync({
     content: {
       title: 'Step Milestone Reached! 🎉',
       body: messages[messageIndex],
-      data: { milestone },
+      data: { milestone: currentMilestone },
       categoryIdentifier: 'steps',
       sound: true,
     },
-    trigger: null,
+    trigger: null, // Show immediately
   });
 }
