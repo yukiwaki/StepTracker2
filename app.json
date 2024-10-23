@@ -18,7 +18,8 @@
         "UIBackgroundModes": [
           "fetch",
           "remote-notification"
-        ]
+        ],
+        "GADApplicationIdentifier": "ca-app-pub-7806909697893666~7500479473"
       }
     },
     "android": {

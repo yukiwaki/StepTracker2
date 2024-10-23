@@ -3,7 +3,10 @@ import mobileAds, {
   RewardedAdEventType,
   TestIds,
   AdEventType,
+  RequestConfiguration,
+  MaxAdContentRating,
 } from 'react-native-google-mobile-ads';
+import { Platform } from 'react-native';
 
 // Test IDs
 export const AD_UNIT_IDS = {
@@ -11,6 +14,9 @@ export const AD_UNIT_IDS = {
     ? TestIds.REWARDED
     : 'ca-app-pub-7806909697893666/6712672687'
 };
+
+// Add your iOS app ID here
+const IOS_APP_ID = 'ca-app-pub-7806909697893666~7500479473'; // Replace with your iOS app ID
 
 console.log('Current AD_UNIT_ID:', AD_UNIT_IDS.REWARDED);
 
@@ -20,11 +26,24 @@ let isInitialized = false;
 export async function initializeAds() {
   console.log('Starting ads initialization...');
   try {
-    // Add a small delay before initialization
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const result = await mobileAds().initialize();
-    console.log('Mobile ads initialization response:', result);
+    // Configure the mobile ads SDK
+    const requestConfig: RequestConfiguration = {
+      maxAdContentRating: MaxAdContentRating.PG,
+      tagForChildDirectedTreatment: true,
+      tagForUnderAgeOfConsent: true,
+    };
+
+    // Initialize with iOS App ID
+    if (Platform.OS === 'ios') {
+      console.log('Initializing iOS ads with app ID:', IOS_APP_ID);
+      await mobileAds().setRequestConfiguration(requestConfig);
+      const result = await mobileAds().initialize();
+      console.log('Mobile ads initialization response:', result);
+    } else {
+      // For Android or other platforms
+      const result = await mobileAds().initialize();
+      console.log('Mobile ads initialization response:', result);
+    }
     
     // Wait a bit after initialization before marking as ready
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -44,6 +63,8 @@ export async function initializeAds() {
     return false;
   }
 }
+
+// Rest of your code remains the same...
 
 // Check initialization status
 export function checkAdsInitialization(): Promise<boolean> {
