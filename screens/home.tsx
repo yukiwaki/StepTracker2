@@ -10,10 +10,11 @@ import { MultipliedRewardCelebration } from '../components/MultipliedRewardCeleb
 import type { Multiplier } from '../types/rewards';
 import { Button } from 'react-native';
 import { testNotification } from '../utils/notifications';
+import { TouchableOpacity } from 'react-native';
 
 export default function Home() {
   const { coins, todayStats, collectReward, applyMultiplier } = useReward();
-  const { isAuthorized, error } = useHealthKit();
+  const { isAuthorized, error, refreshSteps } = useHealthKit();
   const [showCelebration, setShowCelebration] = useState(false);
   const [showMultiplier, setShowMultiplier] = useState(false);
   const [selectedBoxId, setSelectedBoxId] = useState<string | null>(null);
@@ -98,6 +99,15 @@ export default function Home() {
             }
           }}
         />
+        <TouchableOpacity 
+          style={styles.debugButton}
+          onPress={() => {
+            console.log('Current steps:', todayStats.steps);
+            refreshSteps();
+          }}
+        >
+          <Text style={styles.debugButtonText}>Refresh Steps</Text>
+        </TouchableOpacity>
       </ScrollView>
 
       <CollectionCelebration
@@ -209,5 +219,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#fff',
     textAlign: 'center',
+  },
+  debugButton: {
+    backgroundColor: '#444',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  debugButtonText: {
+    color: '#fff',
   },
 });

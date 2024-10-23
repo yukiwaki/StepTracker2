@@ -46,6 +46,10 @@
       <key>NSAllowsLocalNetworking</key>
       <true/>
     </dict>
+    <key>NSHealthShareUsageDescription</key>
+    <string>We need access to your step count data to track your daily steps and provide rewards</string>
+    <key>NSHealthUpdateUsageDescription</key>
+    <string>We need access to update your health data</string>
     <key>SKAdNetworkItems</key>
     <array>
       <dict>
@@ -56,6 +60,7 @@
     <key>UIBackgroundModes</key>
     <array>
       <string>fetch</string>
+      <string>remote-notification</string>
     </array>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
