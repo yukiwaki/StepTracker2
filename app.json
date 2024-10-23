@@ -14,12 +14,22 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.wakiyuki.StepTracker2",
+      "config": {
+        "googleMobileAdsAppId": "ca-app-pub-7806909697893666~7500479473"
+      },
       "infoPlist": {
-        "UIBackgroundModes": [
+        "GADApplicationIdentifier": "ca-app-pub-7806909697893666~7500479473",
+        "SKAdNetworkItems": [
+          {
+            "SKAdNetworkIdentifier": "cstr6suwn9.skadnetwork"
+          }
+        ],
+        "NSHealthShareUsageDescription": "We need access to your step count data to track your daily steps and provide rewards",
+        "NSHealthUpdateUsageDescription": "We need access to update your health data",
+                "UIBackgroundModes": [
           "fetch",
           "remote-notification"
-        ],
-        "GADApplicationIdentifier": "ca-app-pub-7806909697893666~7500479473"
+        ]
       }
     },
     "android": {
@@ -38,7 +48,8 @@
         {
           "android": true,
           "ios": {
-            "appId": "ca-app-pub-7806909697893666~7500479473"
+            "appId": "ca-app-pub-7806909697893666~7500479473",
+            "skipProvisioning": false
           }
         }
       ],
@@ -47,6 +58,14 @@
         {
           "icon": "./assets/icon.png",
           "color": "#ffffff"
+        }
+      ],
+      [
+        "react-native-health",
+        {
+          "isClinicalDataEnabled": false,
+          "healthSharePermission": "We need access to your step count data to track your daily steps and provide rewards",
+          "healthUpdatePermission": "We need access to update your health data"
         }
       ]
     ]

@@ -2,8 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
   <dict>
-    <key>GADApplicationIdentifier</key>
-    <string>ca-app-pub-7806909697893666~7500479473</string>
     <key>CADisableMinimumFrameDurationOnPhone</key>
     <true/>
     <key>CFBundleDevelopmentRegion</key>
@@ -35,6 +33,8 @@
     </array>
     <key>CFBundleVersion</key>
     <string>1</string>
+    <key>GADApplicationIdentifier</key>
+    <string>ca-app-pub-7806909697893666~7500479473</string>
     <key>GADDelayAppMeasurementInit</key>
     <false/>
     <key>LSRequiresIPhoneOS</key>
@@ -46,10 +46,16 @@
       <key>NSAllowsLocalNetworking</key>
       <true/>
     </dict>
+    <key>SKAdNetworkItems</key>
+    <array>
+      <dict>
+        <key>SKAdNetworkIdentifier</key>
+        <string>cstr6suwn9.skadnetwork</string>
+      </dict>
+    </array>
     <key>UIBackgroundModes</key>
     <array>
       <string>fetch</string>
-      <string>remote-notification</string>
     </array>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
