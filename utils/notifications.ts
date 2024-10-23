@@ -40,30 +40,30 @@ export async function setupNotifications() {
 }
 
 // Add this test function
-// export async function testNotification() {
-//   try {
-//     const permission = await setupNotifications(); // Ensure permissions are set
-//     if (!permission) {
-//       console.log('No notification permission');
-//       return;
-//     }
+export async function testNotification() {
+  try {
+    const permission = await setupNotifications(); // Ensure permissions are set
+    if (!permission) {
+      console.log('No notification permission');
+      return;
+    }
 
-//     console.log('Scheduling test notification...'); // Debug log
+    console.log('Scheduling test notification...'); // Debug log
     
-//     await Notifications.scheduleNotificationAsync({
-//       content: {
-//         title: 'Test Notification 🔔',
-//         body: 'If you see this, notifications are working!',
-//         sound: true,
-//       },
-//       trigger: null, // null means show immediately
-//     });
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Test Notification 🔔',
+        body: 'If you see this, notifications are working!',
+        sound: true,
+      },
+      trigger: null, // null means show immediately
+    });
     
-//     console.log('Test notification scheduled'); // Debug log
-//   } catch (error) {
-//     console.error('Error sending test notification:', error);
-//   }
-// }
+    console.log('Test notification scheduled'); // Debug log
+  } catch (error) {
+    console.error('Error sending test notification:', error);
+  }
+}
 
 export async function scheduleStepMilestoneNotification(steps: number) {
   const currentMilestone = Math.floor(steps / 500) * 500;
